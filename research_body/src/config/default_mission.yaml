@@ -1,0 +1,215 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# DEFAULT MISSION CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# This file defines default settings for research missions.
+# Users can override these settings when creating custom missions.
+#
+# Think of this as the "organism's baseline configuration" — how it
+# behaves by default when no specific instructions are given.
+#
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ───────────────────────────────────────────────────────────────────────────
+# MISSION PARAMETERS
+# ───────────────────────────────────────────────────────────────────────────
+
+mission:
+  # The research query or topic
+  # Example: "Research AI safety trends in 2024"
+  query: "Example research topic"
+
+  # Maximum number of sources to fetch and analyze
+  # Higher values = more comprehensive but slower
+  # Range: 1-20 (recommended: 5-10)
+  max_sources: 5
+
+  # Summary style: "brief", "balanced", or "detailed"
+  # - brief: 100-200 words, key highlights only
+  # - balanced: 300-500 words, main points with context
+  # - detailed: 500-1000 words, comprehensive analysis
+  summary_style: "balanced"
+
+  # Target audience: "general", "technical", "executive"
+  # Affects tone, jargon level, and focus
+  target_audience: "general"
+
+# ───────────────────────────────────────────────────────────────────────────
+# SCRAPER TOOL CONFIGURATION
+# ───────────────────────────────────────────────────────────────────────────
+
+scraper:
+  # HTTP request timeout in seconds
+  timeout: 30
+
+  # User-agent string for requests
+  # (Identifies our bot to web servers)
+  user_agent: "ResearchBodyBot/1.0 (Educational Project; +https://github.com/yourusername/research-body)"
+
+  # Retry attempts for failed requests
+  max_retries: 3
+
+  # Delay between retries (seconds)
+  retry_delay: 2
+
+  # Maximum page size to fetch (bytes)
+  # Prevents downloading huge files
+  max_page_size: 10485760  # 10 MB
+
+  # Follow redirects?
+  follow_redirects: true
+
+# ───────────────────────────────────────────────────────────────────────────
+# CLEANER TOOL CONFIGURATION
+# ───────────────────────────────────────────────────────────────────────────
+
+cleaner:
+  # Minimum content length (characters) after cleaning
+  # Pages with less content are considered low-quality
+  min_content_length: 200
+
+  # Maximum content length (characters) after cleaning
+  # Prevents processing of extremely long pages
+  max_content_length: 50000
+
+  # Remove these HTML elements
+  remove_elements:
+    - "nav"
+    - "footer"
+    - "aside"
+    - "script"
+    - "style"
+    - "iframe"
+    - "noscript"
+
+  # Extract structured content
+  extract_headings: true
+  extract_lists: true
+  extract_tables: false  # Experimental feature
+
+# ───────────────────────────────────────────────────────────────────────────
+# SUMMARIZER AGENT CONFIGURATION
+# ───────────────────────────────────────────────────────────────────────────
+
+summarizer:
+  # Default tone: "neutral", "enthusiastic", "critical", "academic"
+  tone: "neutral"
+
+  # Include citations in summary?
+  include_citations: true
+
+  # Extract key themes and trends?
+  identify_themes: true
+
+  # Word count targets (overridden by mission.summary_style)
+  word_counts:
+    brief: 150
+    balanced: 400
+    detailed: 750
+
+# ───────────────────────────────────────────────────────────────────────────
+# NOTION TOOL CONFIGURATION
+# ───────────────────────────────────────────────────────────────────────────
+
+notion:
+  # Notion API key (set via environment variable)
+  # NOTION_API_KEY=secret_xyz...
+  api_key_env: "NOTION_API_KEY"
+
+  # Notion database ID (set via environment variable)
+  # NOTION_DATABASE_ID=abc123...
+  database_id_env: "NOTION_DATABASE_ID"
+
+  # Automatically tag entries?
+  auto_tag: true
+
+  # Default tags to apply
+  default_tags:
+    - "research-body"
+    - "automated"
+
+# ───────────────────────────────────────────────────────────────────────────
+# LOGGER TOOL CONFIGURATION
+# ───────────────────────────────────────────────────────────────────────────
+
+logger:
+  # SQLite database path
+  database_path: "data/missions.sqlite"
+
+  # Log level: "DEBUG", "INFO", "WARNING", "ERROR"
+  log_level: "INFO"
+
+  # Store full HTML responses? (for debugging)
+  store_raw_html: false
+
+  # Store intermediate cleaning results?
+  store_cleaned_text: true
+
+# ───────────────────────────────────────────────────────────────────────────
+# PIPELINE CONFIGURATION
+# ───────────────────────────────────────────────────────────────────────────
+
+pipeline:
+  # Execution mode: "sequential", "parallel" (Phase 3+)
+  execution_mode: "sequential"
+
+  # Stop on first error or continue?
+  fail_fast: false
+
+  # Enable progress reporting?
+  show_progress: true
+
+  # Cache fetched pages? (Phase 3+)
+  enable_caching: false
+
+  # Cache directory
+  cache_dir: "data/caches"
+
+# ───────────────────────────────────────────────────────────────────────────
+# EXAMPLE MISSION TEMPLATES
+# ───────────────────────────────────────────────────────────────────────────
+
+# Users can reference these templates when creating missions
+templates:
+  wildfire_research:
+    query: "Wildfire trends and statistics"
+    max_sources: 8
+    summary_style: "detailed"
+    target_audience: "general"
+
+  hardware_security:
+    query: "Hardware security vulnerabilities"
+    max_sources: 10
+    summary_style: "technical"
+    target_audience: "technical"
+
+  ai_safety:
+    query: "AI safety research developments"
+    max_sources: 6
+    summary_style: "balanced"
+    target_audience: "general"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# TEACHING NOTES
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Why YAML for configuration?
+#   • Human-readable and easy to edit
+#   • Supports comments (like this file!)
+#   • Hierarchical structure maps to Python dicts
+#   • Widely used in DevOps and configuration management
+#
+# Configuration Best Practices:
+#   • Provide sensible defaults (system works without changes)
+#   • Document every option (explain what it does)
+#   • Use environment variables for secrets (not hardcoded)
+#   • Group related settings together
+#   • Include example templates
+#
+# How to use this config:
+#   import yaml
+#   with open("default_mission.yaml") as f:
+#       config = yaml.safe_load(f)
+#   print(config["mission"]["max_sources"])  # 5
+#
+# ═══════════════════════════════════════════════════════════════════════════
