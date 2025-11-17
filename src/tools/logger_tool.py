@@ -45,6 +45,7 @@ DEBUGGING TIPS:
 """
 
 import sqlite3
+import json
 from typing import Dict, List, Optional
 from datetime import datetime
 from pathlib import Path
@@ -54,113 +55,263 @@ from pathlib import Path
 DB_PATH = Path(__file__).parent.parent.parent / "data" / "missions.sqlite"
 
 
-def init_database() -> bool:
+class LoggerTool:
     """
-    Initialize the SQLite database for mission logging.
+    THE MEMORY — Deterministic Mission Logging Tool
+    ================================================
 
-    Creates the necessary tables if they don't exist.
+    This class encapsulates all database logging operations.
+    It's a TOOL because it has NO autonomous decision-making.
 
-    Returns:
-        True if initialization succeeded
+    TOOL CHARACTERISTICS:
+    ---------------------
+      • Records data exactly as provided
+      • No judgment about what's important
+      • Deterministic: same data → same log entry
+      • Returns confirmation without interpretation
+
+    WHY NOT AN AGENT:
+    -----------------
+    The Logger doesn't decide:
+      - What is worth logging
+      - How to organize or categorize data
+      - When to archive or delete old data
+      - What patterns or anomalies exist
+
+    It just logs. Period.
 
     TEACHING NOTE:
     --------------
-    This is a stub implementation. In Phase 2, we'll add:
-      • Complete schema with all necessary tables
-      • Migrations for schema updates
-      • Indexes for query performance
-      • Foreign key constraints
+    This is a fully functional SQLite logger demonstrating
+    persistent state management and structured data storage.
     """
-    # STUB: Simulate database initialization
-    # In Phase 2, this will create actual SQLite tables
 
-    print(f"[LOGGER TOOL] Initializing database at: {DB_PATH}")
+    def __init__(self, db_path: Optional[Path] = None, debug: bool = False):
+        """
+        Initialize the Logger Tool.
 
-    # Ensure data directory exists
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        Args:
+            db_path: Path to SQLite database (uses default if None)
+            debug: Enable detailed logging output
+        """
+        self.db_path = db_path or DB_PATH
+        self.debug = debug
+        self._ensure_database()
 
-    # Placeholder: In Phase 2, we'll create tables here
-    # conn = sqlite3.connect(DB_PATH)
-    # cursor = conn.cursor()
-    # cursor.execute('''CREATE TABLE IF NOT EXISTS missions ...''')
-    # conn.commit()
-    # conn.close()
+    def _ensure_database(self):
+        """Ensure database and tables exist."""
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        # Create missions table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS missions (
+                mission_id TEXT PRIMARY KEY,
+                topic TEXT NOT NULL,
+                status TEXT NOT NULL,
+                created_at TIMESTAMP NOT NULL,
+                completed_at TIMESTAMP,
+                source_count INTEGER,
+                summary_count INTEGER,
+                metadata TEXT
+            )
+        ''')
+
+        # Create fetches table (tracks individual URL fetches)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS fetches (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                mission_id TEXT NOT NULL,
+                url TEXT NOT NULL,
+                status_code INTEGER,
+                fetch_time REAL,
+                timestamp TIMESTAMP NOT NULL,
+                FOREIGN KEY (mission_id) REFERENCES missions (mission_id)
+            )
+        ''')
+
+        # Create summaries table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS summaries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                mission_id TEXT NOT NULL,
+                summary_text TEXT NOT NULL,
+                style TEXT,
+                word_count INTEGER,
+                quality_score REAL,
+                timestamp TIMESTAMP NOT NULL,
+                FOREIGN KEY (mission_id) REFERENCES missions (mission_id)
+            )
+        ''')
+
+        # Create indexes for performance
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_missions_timestamp ON missions(created_at)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_fetches_mission ON fetches(mission_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_summaries_mission ON summaries(mission_id)')
+
+        conn.commit()
+        conn.close()
+
+    def log_mission(self, mission_data: Dict) -> str:
+        """
+        Log a mission to the database.
+
+        Args:
+            mission_data: Dictionary containing:
+                - mission_id: Unique identifier
+                - topic: Research topic
+                - status: Mission status (pending, in_progress, completed, failed)
+                - source_count: Number of sources
+                - summary_count: Number of summaries
+                - metadata: Additional JSON metadata
+
+        Returns:
+            Mission ID of the logged mission
+
+        Example:
+            >>> logger = LoggerTool()
+            >>> mission_id = logger.log_mission({
+            >>>     "mission_id": "m_001",
+            >>>     "topic": "Wildfire AI",
+            >>>     "status": "completed",
+            >>>     "source_count": 5
+            >>> })
+        """
+        mission_id = mission_data.get('mission_id', '')
+        topic = mission_data.get('topic', '')
+        status = mission_data.get('status', 'pending')
+        source_count = mission_data.get('source_count', 0)
+        summary_count = mission_data.get('summary_count', 0)
+        metadata = json.dumps(mission_data.get('metadata', {}))
+        created_at = mission_data.get('created_at', datetime.now())
+        completed_at = mission_data.get('completed_at')
+
+        if self.debug:
+            print(f"\n[LOGGER TOOL] Logging mission: {mission_id}")
+            print(f"[LOGGER TOOL] Topic: {topic}")
+            print(f"[LOGGER TOOL] Status: {status}")
+
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            INSERT OR REPLACE INTO missions
+            (mission_id, topic, status, created_at, completed_at, source_count, summary_count, metadata)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (mission_id, topic, status, created_at, completed_at, source_count, summary_count, metadata))
+
+        conn.commit()
+        conn.close()
+
+        if self.debug:
+            print(f"[LOGGER TOOL] ✓ Mission logged successfully")
+
+        return mission_id
+
+    def log_fetch(self, mission_id: str, url: str, status_code: int, fetch_time: float):
+        """Log a URL fetch operation."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            INSERT INTO fetches (mission_id, url, status_code, fetch_time, timestamp)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (mission_id, url, status_code, fetch_time, datetime.now()))
+
+        conn.commit()
+        conn.close()
+
+    def log_summary(self, mission_id: str, summary_data: Dict):
+        """Log a generated summary."""
+        summary_text = summary_data.get('summary', '')
+        style = summary_data.get('style', 'unknown')
+        word_count = summary_data.get('word_count', 0)
+        quality_score = summary_data.get('score', 0.0)
+
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            INSERT INTO summaries (mission_id, summary_text, style, word_count, quality_score, timestamp)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (mission_id, summary_text, style, word_count, quality_score, datetime.now()))
+
+        conn.commit()
+        conn.close()
+
+    def get_mission_history(self, limit: int = 10) -> List[Dict]:
+        """Retrieve recent mission history."""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT * FROM missions
+            ORDER BY created_at DESC
+            LIMIT ?
+        ''', (limit,))
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        return [dict(row) for row in rows]
+
+    def get_mission_by_id(self, mission_id: str) -> Optional[Dict]:
+        """Retrieve a specific mission by ID."""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT * FROM missions WHERE mission_id = ?', (mission_id,))
+        row = cursor.fetchone()
+        conn.close()
+
+        return dict(row) if row else None
+
+    def get_mission_stats(self) -> Dict:
+        """Get overall statistics about all missions."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT COUNT(*) FROM missions')
+        total_missions = cursor.fetchone()[0]
+
+        cursor.execute('SELECT COUNT(*) FROM missions WHERE status = "completed"')
+        completed_missions = cursor.fetchone()[0]
+
+        cursor.execute('SELECT COUNT(*) FROM fetches')
+        total_fetches = cursor.fetchone()[0]
+
+        cursor.execute('SELECT COUNT(*) FROM summaries')
+        total_summaries = cursor.fetchone()[0]
+
+        conn.close()
+
+        return {
+            'total_missions': total_missions,
+            'completed_missions': completed_missions,
+            'success_rate': completed_missions / total_missions if total_missions > 0 else 0.0,
+            'total_fetches': total_fetches,
+            'total_summaries': total_summaries
+        }
+
+
+# Convenience functions for simple one-off logging
+def init_database() -> bool:
+    """Initialize the database (creates tables if needed)."""
+    logger = LoggerTool()
     return True
 
 
 def log_mission(mission_data: Dict) -> str:
-    """
-    Log a mission to the database.
-
-    Args:
-        mission_data: Dictionary containing mission metadata
-            - mission_id: Unique mission identifier
-            - topic: Research topic
-            - status: Mission status
-            - created_at: Timestamp
-
-    Returns:
-        Mission ID of the logged mission
-
-    Example:
-        >>> mission_id = log_mission({
-        >>>     "mission_id": "m_001",
-        >>>     "topic": "Wildfire AI",
-        >>>     "status": "completed"
-        >>> })
-
-    TEACHING NOTE:
-    --------------
-    This is a stub implementation. In Phase 2, we'll add:
-      • Actual database INSERT operations
-      • Transaction handling
-      • Validation of required fields
-      • Timestamp generation
-    """
-    # STUB: Simulate logging
-    # In Phase 2, this will insert into SQLite
-
-    print(f"[LOGGER TOOL] Logging mission: {mission_data.get('mission_id')}")
-    print(f"[LOGGER TOOL] Topic: {mission_data.get('topic')}")
-    print(f"[LOGGER TOOL] Status: {mission_data.get('status')}")
-
-    return mission_data.get('mission_id', 'unknown')
+    """Simple convenience function for logging a mission."""
+    logger = LoggerTool()
+    return logger.log_mission(mission_data)
 
 
 def get_mission_history(limit: int = 10) -> List[Dict]:
-    """
-    Retrieve recent mission history (stub).
-
-    In Phase 2, this will query the database for recent missions
-    and return them in reverse chronological order.
-
-    Args:
-        limit: Maximum number of missions to return
-
-    Returns:
-        List of mission dictionaries
-    """
-    # STUB: Return placeholder data
-    return [
-        {
-            "mission_id": "m_001",
-            "topic": "Placeholder Mission 1",
-            "status": "completed",
-            "created_at": datetime.now().isoformat()
-        }
-    ]
-
-
-# FUTURE: Add these functions in Phase 2
-# def update_mission_status(mission_id: str, status: str) -> bool:
-#     """Update the status of an existing mission"""
-#     pass
-#
-# def get_mission_by_id(mission_id: str) -> Optional[Dict]:
-#     """Retrieve a specific mission by ID"""
-#     pass
-#
-# def export_mission_data(mission_id: str, format: str = "json") -> str:
-#     """Export mission data in specified format"""
-#     pass
+    """Simple convenience function for retrieving mission history."""
+    logger = LoggerTool()
+    return logger.get_mission_history(limit)
