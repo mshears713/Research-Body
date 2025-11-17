@@ -12,6 +12,7 @@ This Streamlit page teaches about pipeline orchestration:
 import streamlit as st
 import sys
 from pathlib import Path
+import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 
@@ -473,8 +474,6 @@ Understanding the time and resource costs of each stage helps optimize the syste
 """)
 
 # Sample performance data
-import pandas as pd
-
 perf_data = pd.DataFrame({
     'Stage': ['Planning', 'Fetching', 'Cleaning', 'Scoring', 'Summarizing', 'Storage', 'Logging'],
     'Avg Time (s)': [0.5, 8.2, 1.3, 0.4, 2.1, 0.6, 0.2],
