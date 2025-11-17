@@ -1,0 +1,106 @@
+# DEFAULT MISSION CONFIGURATION
+# ==============================
+# This file defines a default research mission template.
+# Users can copy and customize this for their specific research needs.
+
+# MISSION METADATA
+# ----------------
+mission:
+  # Human-readable mission name
+  name: "Example Research Mission"
+
+  # Research topic or question
+  # This will be passed to the Planner Agent to decompose into tasks
+  topic: "AI-powered wildfire detection and containment systems"
+
+  # Mission type (affects how the Planner strategizes)
+  # Options: research, monitoring, analysis, trend_tracking
+  type: "research"
+
+
+# SOURCE CONFIGURATION
+# --------------------
+sources:
+  # Specific URLs to fetch (optional)
+  # If empty, the Planner Agent will need to discover sources
+  urls:
+    - "https://example.com/wildfire-ai-article"
+    - "https://example.com/thermal-imaging-drones"
+
+  # Maximum number of sources to fetch
+  # The Planner will prioritize and select up to this many
+  max_sources: 5
+
+  # Allowed domains (optional whitelist)
+  # If specified, only sources from these domains will be used
+  allowed_domains:
+    - "example.com"
+    - "research.org"
+
+  # Blocked domains (optional blacklist)
+  blocked_domains:
+    - "spam.com"
+
+
+# PROCESSING PREFERENCES
+# ----------------------
+processing:
+  # Summary style
+  # Options: technical, executive, casual
+  summary_style: "technical"
+
+  # Desired summary length
+  # Options: brief (1-2 paragraphs), medium (3-5), detailed (full analysis)
+  summary_length: "medium"
+
+  # Extract structured data (keywords, entities, dates)
+  extract_metadata: true
+
+  # Content quality threshold (0.0 - 1.0)
+  # Sources scoring below this will be skipped
+  min_quality_score: 0.5
+
+
+# OUTPUT CONFIGURATION
+# --------------------
+output:
+  # Output format
+  # Options: markdown, plain, html, json
+  format: "markdown"
+
+  # Save raw HTML for debugging
+  save_raw_html: false
+
+  # Save cleaned text
+  save_clean_text: true
+
+  # Write to Notion
+  write_to_notion: true
+
+  # Notion page or database ID (if write_to_notion is true)
+  notion_page_id: "YOUR_NOTION_PAGE_ID_HERE"
+
+
+# LOGGING & DEBUGGING
+# -------------------
+logging:
+  # Log level: debug, info, warning, error
+  level: "info"
+
+  # Save mission to SQLite archive
+  archive_mission: true
+
+  # Include detailed timing information
+  include_timings: true
+
+
+# TEACHING NOTES
+# --------------
+# This YAML file demonstrates configuration-driven design.
+# Users can modify mission behavior without touching code.
+#
+# In Phase 2, the Flow Controller will read this file and
+# use it to configure the entire pipeline.
+#
+# In Phase 5, we'll add support for multiple mission templates
+# (wildfire research, hardware security, etc.)
