@@ -19,12 +19,12 @@ import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
 
-# Add src to path for imports
-src_path = Path(__file__).parent.parent.parent / "src"
-sys.path.insert(0, str(src_path))
+# Add project root to path for imports
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
 
-from pipeline.flow_controller import FlowController
-from pipeline.mission_model import MissionRequest
+from src.pipeline.flow_controller import FlowController
+from src.pipeline.mission_model import MissionRequest
 
 # Page configuration
 st.set_page_config(
@@ -32,6 +32,60 @@ st.set_page_config(
     page_icon="🎮",
     layout="wide"
 )
+
+# Custom CSS for organism theme
+st.markdown("""
+<style>
+    /* Organism Theme - Living System Colors */
+    .stApp {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8f4f8 100%);
+    }
+
+    /* Organ Status Indicators */
+    .organ-status {
+        padding: 1rem;
+        border-radius: 10px;
+        margin: 0.5rem 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 500;
+    }
+
+    /* Mission Panel */
+    .mission-panel {
+        background: rgba(255, 255, 255, 0.9);
+        border-left: 4px solid #4CAF50;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin: 1rem 0;
+    }
+
+    /* Pulse Animation for Active State */
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+
+    .pulsing {
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    /* Organ Health Indicators */
+    .healthy { color: #4CAF50; }
+    .warning { color: #FF9800; }
+    .critical { color: #F44336; }
+
+    /* Results Section */
+    .results-section {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        padding: 2rem;
+        border-radius: 12px;
+        color: white;
+        margin: 1rem 0;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Initialize session state for mission history
 if 'mission_history' not in st.session_state:
@@ -45,26 +99,38 @@ if 'mission_running' not in st.session_state:
 # TITLE AND INTRODUCTION
 # ============================================================================
 
-st.title("🎮 Chapter 8: Mission Console")
-st.subheader("*Launch and Monitor Research Missions in Real-Time*")
+# Header with organism theme
+st.markdown("""
+<div style='text-align: center; padding: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; margin-bottom: 2rem;'>
+    <h1 style='color: white; margin: 0;'>🎮 Mission Console</h1>
+    <p style='color: #e0e7ff; font-size: 1.2rem; margin-top: 0.5rem;'>The Organism's Control Center</p>
+</div>
+""", unsafe_allow_html=True)
 
 st.markdown("---")
 
 st.markdown("""
-## Welcome to the Control Room
+## 🫀 Welcome to the Living Control Room
 
 This is where you **bring the research organism to life**. Configure a research
 mission, launch it, and watch as data flows through each organ — from raw web
 pages to polished summaries.
 
+### The Organism in Action
+
 You'll see the organism "breathing" as it works:
-- 🧠 **The Mind** plans the strategy
-- 🦾 **The Limb** fetches sources
-- 🫀 **The Stomach** digests content
-- 👅 **The Tongue** narrates findings
-- ✋ **The Hand** preserves knowledge
-- 💾 **The Memory** records history
-""")
+
+<div style='background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 1.5rem; border-radius: 10px; margin: 1rem 0;'>
+
+- 🧠 **The Mind (Planner Agent)** — Plans the research strategy
+- 🦾 **The Limb (Scraper Tool)** — Fetches sources from the web
+- 🫀 **The Stomach (Cleaner Tool)** — Digests and processes content
+- 👅 **The Tongue (Summarizer Agent)** — Narrates and synthesizes findings
+- ✋ **The Hand (Notion Tool)** — Preserves knowledge for the future
+- 💾 **The Memory (Logger Tool)** — Records complete mission history
+
+</div>
+""", unsafe_allow_html=True)
 
 st.markdown("---")
 

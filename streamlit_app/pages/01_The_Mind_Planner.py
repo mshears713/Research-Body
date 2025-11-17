@@ -13,12 +13,12 @@ import streamlit as st
 import sys
 from pathlib import Path
 
-# Add src to path for imports
-src_path = Path(__file__).parent.parent.parent / "src"
-sys.path.insert(0, str(src_path))
+# Add project root to path for imports
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
 
-from agents.planner_agent import PlannerAgent
-from pipeline.mission_model import MissionRequest
+from src.agents.planner_agent import PlannerAgent
+from src.pipeline.mission_model import MissionRequest
 
 # Page configuration
 st.set_page_config(

@@ -15,9 +15,9 @@ from pathlib import Path
 import plotly.graph_objects as go
 import plotly.express as px
 
-# Add src to path for imports
-src_path = Path(__file__).parent.parent.parent / "src"
-sys.path.insert(0, str(src_path))
+# Add project root to path for imports
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
 
 # Page configuration
 st.set_page_config(
