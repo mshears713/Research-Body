@@ -302,6 +302,113 @@ class NotionTool:
             }
         }
 
+    def write_mission(self, mission_data: Dict) -> bool:
+        """
+        Write mission results to Notion (Phase 3, Step 27).
+
+        This method formats mission data and writes it to a Notion page.
+        It's designed to be called by the Flow Controller after mission completion.
+
+        Args:
+            mission_data: Dictionary containing:
+                - mission_id: Unique identifier
+                - topic: Research topic
+                - summaries: List of generated summaries
+                - status: Mission status
+                - metadata: Additional metadata
+
+        Returns:
+            True if write succeeded, False otherwise
+
+        Example:
+            >>> notion = NotionTool()
+            >>> success = notion.write_mission({
+            ...     'mission_id': 'mission_abc123',
+            ...     'topic': 'AI wildfire detection',
+            ...     'summaries': ['Summary 1...', 'Summary 2...'],
+            ...     'status': 'completed'
+            ... })
+
+        PHASE 3 INTEGRATION (Step 27):
+        -------------------------------
+        This connects the Notion TOOL to the mission pipeline, allowing
+        automatic writing of research results to Notion workspace.
+
+        TEACHING NOTE:
+        --------------
+        This method demonstrates TOOL INTEGRATION with the pipeline.
+        It receives structured mission data and deterministically formats
+        it for Notion, no decisions about WHAT to write or WHERE.
+        """
+        if self.debug:
+            print(f"\n[NOTION TOOL] Writing mission results")
+            print(f"[NOTION TOOL] Mission: {mission_data.get('mission_id', 'unknown')}")
+            print(f"[NOTION TOOL] Topic: {mission_data.get('topic', 'unknown')}")
+
+        # Extract mission data
+        mission_id = mission_data.get('mission_id', 'unknown')
+        topic = mission_data.get('topic', 'Untitled Research')
+        summaries = mission_data.get('summaries', [])
+        status = mission_data.get('status', 'unknown')
+        metadata = mission_data.get('metadata', {})
+
+        # Format content for Notion
+        content_parts = []
+
+        # Mission header
+        content_parts.append(f"# Mission: {topic}\n")
+        content_parts.append(f"**Mission ID:** {mission_id}")
+        content_parts.append(f"**Status:** {status}")
+        content_parts.append(f"**Date:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+        # Summaries section
+        if summaries:
+            content_parts.append("## Research Summaries\n")
+            for i, summary in enumerate(summaries, 1):
+                content_parts.append(f"### Source {i}\n")
+                content_parts.append(summary)
+                content_parts.append("")  # Blank line
+
+        # Metadata section (if present)
+        if metadata:
+            scores = metadata.get('scores', {})
+            plan = metadata.get('plan', {})
+
+            if scores or plan:
+                content_parts.append("## Mission Details\n")
+
+            if scores:
+                avg_score = sum(scores.values()) / len(scores) if scores else 0
+                content_parts.append(f"**Average Quality Score:** {avg_score:.2f}")
+
+            if plan:
+                reasoning = plan.get('reasoning', '')
+                if reasoning:
+                    content_parts.append(f"**Planning Reasoning:** {reasoning[:200]}...")
+
+        content = '\n'.join(content_parts)
+
+        # Use a default page ID (in production, this would be configurable)
+        # For now, we use mission_id as page_id (stub behavior)
+        page_id = mission_id
+
+        # Call the base write method
+        result = self.write_to_notion(
+            content=content,
+            page_id=page_id,
+            title=f"Research: {topic}"
+        )
+
+        success = result['success']
+
+        if self.debug:
+            if success:
+                print(f"[NOTION TOOL] ✓ Mission written successfully")
+            else:
+                print(f"[NOTION TOOL] ✗ Mission write failed: {result.get('error')}")
+
+        return success
+
     def _record_write(self, page_id: str, title: str, result: Dict):
         """Record write operation in history for debugging."""
         self._write_history.append({

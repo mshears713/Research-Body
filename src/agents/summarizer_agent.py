@@ -136,6 +136,12 @@ class SummarizerAgent:
             'focus': 'main ideas, storytelling',
             'sentence_count': (4, 8),
             'bullet_points': False
+        },
+        'trend_analysis': {
+            'tone': 'analytical and comparative',
+            'focus': 'patterns, changes, emerging themes',
+            'sentence_count': (6, 12),
+            'bullet_points': True
         }
     }
 
@@ -496,6 +502,331 @@ class SummarizerAgent:
         reasoning += f"Quality score: {score:.2f}."
 
         return reasoning
+
+    def analyze_trends(
+        self,
+        texts: List[str],
+        topic: str,
+        titles: Optional[List[str]] = None
+    ) -> Dict[str, any]:
+        """
+        Analyze trends across multiple texts (Phase 3, Step 26).
+
+        This demonstrates AGENT DECISION-MAKING for trend identification.
+        The agent compares multiple sources to find:
+          - Common themes
+          - Emerging patterns
+          - Keyword trends
+          - Sentiment shifts
+          - Coverage diversity
+
+        Args:
+            texts: List of cleaned text strings from multiple sources
+            topic: Research topic for context
+            titles: Optional list of titles corresponding to texts
+
+        Returns:
+            Dictionary containing:
+            - trend_summary: Narrative summary of trends
+            - common_themes: Most frequent themes across sources
+            - emerging_keywords: Keywords gaining prominence
+            - diversity_score: How diverse the sources are
+            - trend_analysis: Detailed analysis
+
+        Example:
+            >>> summarizer = SummarizerAgent()
+            >>> texts = [text1, text2, text3]
+            >>> result = summarizer.analyze_trends(texts, "AI research")
+            >>> print(result['trend_summary'])
+            >>> print(result['common_themes'])
+
+        PHASE 3 EXTENSION (Step 26):
+        -----------------------------
+        This adds TREND ANALYSIS MODE — going beyond single-document
+        summarization to identify patterns across multiple sources.
+
+        TEACHING NOTE:
+        --------------
+        This demonstrates advanced AGENT behavior: comparative analysis.
+        The agent doesn't just process each text independently — it
+        synthesizes insights across multiple sources to identify trends.
+
+        Compare this to simple summarization:
+          - Summarization: "What does THIS say?"
+          - Trend Analysis: "What are ALL of these saying TOGETHER?"
+
+        This is higher-level intelligence — seeing the forest, not just trees.
+        """
+        if self.debug:
+            print(f"\n[SUMMARIZER AGENT] Trend analysis across {len(texts)} sources")
+            print(f"[SUMMARIZER AGENT] Topic: {topic}")
+
+        if not texts:
+            return {
+                'trend_summary': "No texts provided for analysis.",
+                'common_themes': [],
+                'emerging_keywords': [],
+                'diversity_score': 0.0,
+                'trend_analysis': {}
+            }
+
+        # DECISION POINT 1: Extract keywords from all sources
+        all_keywords = []
+        text_keywords = []
+        for text in texts:
+            keywords = self._extract_keywords(text)
+            text_keywords.append(keywords)
+            all_keywords.extend(keywords)
+
+        # DECISION POINT 2: Identify common themes (most frequent keywords)
+        keyword_freq = Counter(all_keywords)
+        common_themes = [word for word, count in keyword_freq.most_common(10)]
+
+        # DECISION POINT 3: Identify emerging keywords (appear in later sources)
+        emerging_keywords = self._identify_emerging_keywords(text_keywords)
+
+        # DECISION POINT 4: Calculate diversity across sources
+        from ..utils import scoring
+        diversity_score = scoring.score_diversity(texts)
+
+        # DECISION POINT 5: Identify consensus vs. divergence
+        consensus_points = self._find_consensus(texts, common_themes)
+
+        # DECISION POINT 6: Generate trend narrative
+        trend_summary = self._generate_trend_narrative(
+            topic=topic,
+            num_sources=len(texts),
+            common_themes=common_themes,
+            emerging_keywords=emerging_keywords,
+            diversity_score=diversity_score,
+            consensus_points=consensus_points
+        )
+
+        # Compile trend analysis data
+        trend_analysis = {
+            'num_sources': len(texts),
+            'total_keywords': len(all_keywords),
+            'unique_keywords': len(set(all_keywords)),
+            'keyword_frequency': dict(keyword_freq.most_common(20)),
+            'consensus_points': consensus_points,
+            'divergence_areas': self._find_divergence(texts, text_keywords)
+        }
+
+        result = {
+            'trend_summary': trend_summary,
+            'common_themes': common_themes,
+            'emerging_keywords': emerging_keywords,
+            'diversity_score': diversity_score,
+            'trend_analysis': trend_analysis,
+            'metadata': {
+                'num_sources': len(texts),
+                'avg_source_length': sum(len(t) for t in texts) / len(texts),
+                'topic': topic
+            }
+        }
+
+        if self.debug:
+            print(f"[SUMMARIZER AGENT] ✓ Trend analysis complete")
+            print(f"  Common themes: {len(common_themes)}")
+            print(f"  Emerging keywords: {len(emerging_keywords)}")
+            print(f"  Diversity score: {diversity_score:.2f}")
+
+        return result
+
+    def _identify_emerging_keywords(self, text_keywords: List[List[str]]) -> List[str]:
+        """
+        Identify keywords that appear more in later sources (emerging trends).
+
+        AGENT HEURISTIC: Compare first half vs. second half of sources.
+        Keywords appearing more frequently in later sources are "emerging".
+
+        Args:
+            text_keywords: List of keyword lists, one per text in order
+
+        Returns:
+            List of emerging keywords
+        """
+        if len(text_keywords) < 2:
+            return []
+
+        # Split into first half and second half
+        mid_point = len(text_keywords) // 2
+        first_half = text_keywords[:mid_point]
+        second_half = text_keywords[mid_point:]
+
+        # Count keywords in each half
+        first_freq = Counter([kw for keywords in first_half for kw in keywords])
+        second_freq = Counter([kw for keywords in second_half for kw in keywords])
+
+        # Find keywords more prominent in second half
+        emerging = []
+        for keyword in second_freq:
+            first_count = first_freq.get(keyword, 0)
+            second_count = second_freq[keyword]
+
+            # Emerging if appears at least 2x more in second half
+            if second_count >= first_count * 2 and second_count >= 2:
+                emerging.append(keyword)
+
+        return sorted(emerging, key=lambda k: second_freq[k], reverse=True)[:5]
+
+    def _find_consensus(self, texts: List[str], common_themes: List[str]) -> List[str]:
+        """
+        Find points of consensus across sources.
+
+        AGENT DECISION: Identify sentences/ideas that appear across multiple sources.
+
+        Args:
+            texts: List of text strings
+            common_themes: List of common keywords
+
+        Returns:
+            List of consensus points (sentences appearing in multiple sources)
+        """
+        consensus_points = []
+
+        # For each common theme, find sentences mentioning it
+        for theme in common_themes[:5]:  # Top 5 themes
+            theme_sentences = []
+
+            for text in texts:
+                sentences = self._extract_sentences(text)
+                # Find sentences containing this theme
+                for sentence in sentences:
+                    if theme.lower() in sentence.lower():
+                        theme_sentences.append(sentence)
+                        break  # One per source
+
+            # If multiple sources mention this theme, it's a consensus point
+            if len(theme_sentences) >= len(texts) * 0.5:  # 50%+ of sources
+                # Pick the clearest/shortest sentence
+                best_sentence = min(theme_sentences, key=len)
+                if len(best_sentence) < 200:
+                    consensus_points.append(best_sentence)
+
+        return consensus_points[:5]  # Top 5 consensus points
+
+    def _find_divergence(self, texts: List[str], text_keywords: List[List[str]]) -> List[str]:
+        """
+        Find areas where sources diverge (unique perspectives).
+
+        AGENT DECISION: Identify keywords that are unique to individual sources.
+
+        Args:
+            texts: List of text strings
+            text_keywords: List of keyword lists
+
+        Returns:
+            List of divergence descriptions
+        """
+        divergence_areas = []
+
+        # Find keywords unique to each source
+        for i, keywords in enumerate(text_keywords):
+            # Find keywords not in other sources
+            other_keywords = set()
+            for j, other_kw in enumerate(text_keywords):
+                if i != j:
+                    other_keywords.update(other_kw)
+
+            unique_keywords = [kw for kw in keywords if kw not in other_keywords]
+
+            if len(unique_keywords) >= 3:
+                # This source has unique perspective
+                divergence_areas.append(
+                    f"Source {i+1} uniquely discusses: {', '.join(unique_keywords[:3])}"
+                )
+
+        return divergence_areas[:5]
+
+    def _generate_trend_narrative(
+        self,
+        topic: str,
+        num_sources: int,
+        common_themes: List[str],
+        emerging_keywords: List[str],
+        diversity_score: float,
+        consensus_points: List[str]
+    ) -> str:
+        """
+        Generate narrative summary of trends.
+
+        AGENT DECISION: Synthesize findings into coherent narrative.
+
+        Args:
+            topic: Research topic
+            num_sources: Number of sources analyzed
+            common_themes: Common keywords
+            emerging_keywords: Emerging keywords
+            diversity_score: Source diversity score
+            consensus_points: Consensus sentences
+
+        Returns:
+            Narrative string describing trends
+        """
+        narrative_parts = []
+
+        # Opening
+        narrative_parts.append(f"# Trend Analysis: {topic}\n")
+        narrative_parts.append(f"Analyzed {num_sources} sources to identify patterns and trends.\n")
+
+        # Diversity assessment
+        if diversity_score > 0.7:
+            narrative_parts.append(
+                "**Source Diversity**: High — sources cover diverse perspectives and topics."
+            )
+        elif diversity_score > 0.4:
+            narrative_parts.append(
+                "**Source Diversity**: Moderate — sources share some common ground with varied details."
+            )
+        else:
+            narrative_parts.append(
+                "**Source Diversity**: Low — sources are highly similar and overlapping."
+            )
+
+        # Common themes
+        narrative_parts.append("\n## Common Themes:\n")
+        if common_themes:
+            narrative_parts.append("The following themes appear consistently across sources:")
+            for i, theme in enumerate(common_themes[:5], 1):
+                narrative_parts.append(f"{i}. **{theme.capitalize()}**")
+        else:
+            narrative_parts.append("No strong common themes identified.")
+
+        # Emerging trends
+        if emerging_keywords:
+            narrative_parts.append("\n## Emerging Trends:\n")
+            narrative_parts.append(
+                "These topics are gaining prominence in more recent sources:"
+            )
+            for keyword in emerging_keywords:
+                narrative_parts.append(f"- {keyword.capitalize()}")
+
+        # Consensus points
+        if consensus_points:
+            narrative_parts.append("\n## Points of Consensus:\n")
+            for point in consensus_points:
+                narrative_parts.append(f"- {point[:150]}...")
+
+        # Conclusion
+        narrative_parts.append("\n## Summary:\n")
+        if common_themes and emerging_keywords:
+            narrative_parts.append(
+                f"The research on {topic} shows convergence around {common_themes[0]}, "
+                f"with emerging focus on {emerging_keywords[0] if emerging_keywords else 'new developments'}."
+            )
+        elif common_themes:
+            narrative_parts.append(
+                f"The research consistently emphasizes {common_themes[0]}, "
+                f"though sources vary in their specific approaches."
+            )
+        else:
+            narrative_parts.append(
+                f"The research on {topic} shows significant diversity with "
+                f"limited overlap between sources."
+            )
+
+        return '\n'.join(narrative_parts)
 
     def _record_summary(self, result: Dict):
         """Record summarization in history for debugging."""
