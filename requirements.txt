@@ -10,6 +10,9 @@ requests>=2.31.0
 beautifulsoup4>=4.12.0
 lxml>=4.9.0
 
+# Async Web Scraping (Phase 5)
+aiohttp>=3.9.0
+
 # Data Processing
 pyyaml>=6.0
 python-dateutil>=2.8.0

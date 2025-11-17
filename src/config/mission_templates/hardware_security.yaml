@@ -1,0 +1,78 @@
+# ═══════════════════════════════════════════════════════════════
+# MISSION TEMPLATE: Hardware Security Research
+# ═══════════════════════════════════════════════════════════════
+#
+# DOMAIN: Cybersecurity & Hardware Engineering
+# USE CASE: Researching hardware vulnerabilities, side-channel attacks
+#
+# TEACHING NOTE:
+# This template targets technical security research sources.
+# Notice the focus on academic publications and security conferences.
+#
+# ═══════════════════════════════════════════════════════════════
+
+# Mission Metadata
+mission_name: "Hardware Side-Channel Attacks & Defenses"
+domain: "cybersecurity"
+research_type: "vulnerability_analysis"
+
+# Research Topic
+topic: "hardware security vulnerabilities including Spectre, Meltdown, and side-channel attacks"
+
+# Target Sources
+# TEACHING NOTE: Academic and industry security research sources
+target_urls:
+  - "https://spectreattack.com/"
+  - "https://meltdownattack.com/"
+  - "https://www.usenix.org/conference/usenixsecurity23"
+  - "https://www.ieee-security.org/"
+
+# Keywords for relevance filtering
+keywords:
+  - "side-channel attack"
+  - "Spectre"
+  - "Meltdown"
+  - "hardware vulnerability"
+  - "cache timing"
+  - "speculative execution"
+  - "microarchitecture"
+  - "transient execution"
+  - "covert channel"
+  - "hardware security"
+  - "CPU vulnerability"
+
+# Scraping Configuration
+max_sources: 15
+use_intelligent_crawling: true
+max_crawl_depth: 3  # Deep crawl for academic papers
+
+# Content Preferences
+summary_style: "technical"
+min_quality_score: 0.7  # Higher threshold for academic content
+include_citations: true
+
+# Output Configuration
+store_to_notion: true
+export_format: "markdown"
+
+# Research Focus Areas
+focus_areas:
+  - "Attack Vectors"
+  - "Mitigation Techniques"
+  - "Performance Impact"
+  - "Proof of Concepts"
+  - "Real-world Exploits"
+
+# Special Filters
+exclude_patterns:
+  - "news"  # Focus on technical content, not news articles
+  - "blog"  # Prefer academic sources
+  - "forum"
+
+# Notes
+notes: |
+  Hardware security research template focusing on microarchitectural
+  vulnerabilities. Prioritizes academic papers, conference proceedings,
+  and technical documentation over news articles.
+
+  Use deep crawling (depth 3) to follow references to related papers.

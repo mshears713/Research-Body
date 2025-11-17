@@ -109,6 +109,7 @@ from dataclasses import asdict
 
 from ..agents.planner_agent import PlannerAgent
 from ..agents.summarizer_agent import SummarizerAgent
+from ..agents.scraper_agent import ScraperAgent  # NEW in Phase 5
 from ..tools.scraper_tool import ScraperTool
 from ..tools.cleaner_tool import CleanerTool
 from ..tools.notion_tool import NotionTool
@@ -161,10 +162,12 @@ class FlowController:
         self,
         planner: Optional[PlannerAgent] = None,
         scraper: Optional[ScraperTool] = None,
+        scraper_agent: Optional[ScraperAgent] = None,  # NEW in Phase 5
         cleaner: Optional[CleanerTool] = None,
         summarizer: Optional[SummarizerAgent] = None,
         notion: Optional[NotionTool] = None,
         logger: Optional[LoggerTool] = None,
+        use_intelligent_crawling: bool = False,  # NEW in Phase 5
         debug: bool = False,
         progress_callback: Optional[Callable[[str, float], None]] = None
     ):
@@ -174,25 +177,44 @@ class FlowController:
         Args:
             planner: PlannerAgent instance (creates new if None)
             scraper: ScraperTool instance (creates new if None)
+            scraper_agent: ScraperAgent instance for intelligent crawling (Phase 5)
             cleaner: CleanerTool instance (creates new if None)
             summarizer: SummarizerAgent instance (creates new if None)
             notion: NotionTool instance (creates new if None)
             logger: LoggerTool instance (creates new if None)
+            use_intelligent_crawling: Enable ScraperAgent mode (Phase 5 feature)
             debug: Enable detailed logging
             progress_callback: Optional function to report progress (message, percent)
 
-        TEACHING NOTE:
-        --------------
-        Dependency injection pattern: accepts components or creates defaults.
-        This allows testing with mock components or using custom configurations.
+        TEACHING NOTE (Phase 5):
+        ------------------------
+        NEW HYBRIDIZATION PATTERN: The controller now supports TWO modes:
+
+          1. TOOL MODE (Classic):
+             - Uses ScraperTool for simple, deterministic fetching
+             - Fast and predictable
+             - No autonomous exploration
+
+          2. AGENT MODE (Intelligent):
+             - Uses ScraperAgent for autonomous crawling
+             - Slower but smarter
+             - Follows relevant links, retries intelligently
+             - Discovers additional high-quality sources
+
+        Toggle between modes with use_intelligent_crawling flag.
+        This teaches when to use TOOLS vs AGENTS based on needs.
         """
         # Initialize all organs (agents and tools)
         self.planner = planner or PlannerAgent(debug=debug)
-        self.scraper = scraper or ScraperTool(debug=debug)
         self.cleaner = cleaner or CleanerTool(debug=debug)
         self.summarizer = summarizer or SummarizerAgent(debug=debug)
         self.notion = notion or NotionTool(debug=debug)
         self.logger = logger or LoggerTool(debug=debug)
+
+        # PHASE 5 HYBRIDIZATION: Support both tool and agent modes
+        self.use_intelligent_crawling = use_intelligent_crawling
+        self.scraper = scraper or ScraperTool(debug=debug)
+        self.scraper_agent = scraper_agent or ScraperAgent(verbose=debug)
 
         self.debug = debug
         self.progress_callback = progress_callback
@@ -376,14 +398,27 @@ class FlowController:
         """
         STAGE 2: Fetching
 
-        Use the Scraper TOOL to fetch raw HTML from each URL.
-        Implements retry logic for failed fetches.
+        Use either ScraperTool (simple) or ScraperAgent (intelligent)
+        based on use_intelligent_crawling flag.
 
-        TEACHING NOTE:
-        --------------
-        This is a TOOL invocation — deterministic fetching with
-        error handling and retries. The scraper doesn't decide
-        WHAT to fetch, just executes the fetch operation.
+        TEACHING NOTE (Phase 5):
+        ------------------------
+        This demonstrates the TOOL vs AGENT choice in action:
+
+        TOOL MODE (Classic):
+          - Fetches exactly the URLs in the plan
+          - Fast, simple, deterministic
+          - Good for known, high-quality sources
+
+        AGENT MODE (Intelligent):
+          - Starts with plan URLs as seeds
+          - Autonomously explores related content
+          - Follows relevant links
+          - Retries with intelligent backoff
+          - Returns curated, high-quality content
+          - Slower but potentially finds better sources
+
+        The choice teaches: "When do I need autonomy vs simplicity?"
 
         ERROR HANDLING (Phase 3, Step 24):
         -----------------------------------
@@ -394,32 +429,81 @@ class FlowController:
         """
         if self.debug:
             print(f"\n{'='*60}")
-            print("STAGE 2: FETCHING (Tool)")
+            if self.use_intelligent_crawling:
+                print("STAGE 2: INTELLIGENT CRAWLING (Agent)")
+                print("  Mode: ScraperAgent - autonomous exploration")
+            else:
+                print("STAGE 2: FETCHING (Tool)")
+                print("  Mode: ScraperTool - simple deterministic fetch")
             print(f"{'='*60}")
 
         raw_html = {}
 
-        for i, url in enumerate(plan.target_urls):
+        # PHASE 5 HYBRIDIZATION: Choose between tool and agent mode
+        if self.use_intelligent_crawling:
+            # ═══════════════════════════════════════════════════
+            # AGENT MODE: Intelligent crawling with exploration
+            # ═══════════════════════════════════════════════════
             if self.debug:
-                print(f"\nFetching {i+1}/{len(plan.target_urls)}: {url}")
+                print("\n🧠 Using AGENT MODE: Intelligent crawling enabled")
+                print("   The agent will:")
+                print("   • Assess URL relevance before fetching")
+                print("   • Follow promising links autonomously")
+                print("   • Retry failures with intelligent backoff")
+                print("   • Learn from successes to prioritize quality domains\n")
 
-            # Attempt fetch with retries
-            html, status_code, error = self._fetch_with_retry(url)
+            # Extract keywords from topic for relevance assessment
+            keywords = plan.topic.lower().split()
 
-            if html:
+            # Let the agent crawl intelligently
+            crawl_results = self.scraper_agent.crawl_intelligently(
+                seed_urls=plan.target_urls,
+                mission_keywords=keywords,
+                max_pages=len(plan.target_urls) * 2  # Allow agent to find 2x sources
+            )
+
+            # Convert agent results to dict format
+            for url, html in crawl_results:
                 raw_html[url] = html
+
+            if self.debug:
+                print(f"\n✓ Agent crawled {len(raw_html)} pages")
+                metrics = self.scraper_agent.get_performance_metrics()
+                print(f"  Success rate: {metrics['success_rate']*100:.1f}%")
+                print(f"  Decisions made: {metrics['decisions_made']}")
+
+        else:
+            # ═══════════════════════════════════════════════════
+            # TOOL MODE: Simple deterministic fetching
+            # ═══════════════════════════════════════════════════
+            if self.debug:
+                print("\n🔧 Using TOOL MODE: Simple deterministic fetch")
+                print("   Fetching exactly the URLs provided\n")
+
+            for i, url in enumerate(plan.target_urls):
                 if self.debug:
-                    print(f"  ✓ Success: {len(html)} chars")
-            else:
-                if self.debug:
-                    print(f"  ✗ Failed after {self.MAX_RETRIES} attempts: {error}")
-                # Store error in result metadata
-                if 'fetch_errors' not in result.metadata:
-                    result.metadata['fetch_errors'] = {}
-                result.metadata['fetch_errors'][url] = error
+                    print(f"\nFetching {i+1}/{len(plan.target_urls)}: {url}")
+
+                # Attempt fetch with retries
+                html, status_code, error = self._fetch_with_retry(url)
+
+                if html:
+                    raw_html[url] = html
+                    if self.debug:
+                        print(f"  ✓ Success: {len(html)} chars")
+                else:
+                    if self.debug:
+                        print(f"  ✗ Failed after {self.MAX_RETRIES} attempts: {error}")
+                    # Store error in result metadata
+                    if 'fetch_errors' not in result.metadata:
+                        result.metadata['fetch_errors'] = {}
+                    result.metadata['fetch_errors'][url] = error
 
         # Store raw HTML in result
         result.raw_html = raw_html
+
+        # Store mode information in metadata
+        result.metadata['scraping_mode'] = 'agent' if self.use_intelligent_crawling else 'tool'
 
         if not raw_html:
             raise Exception("Failed to fetch any sources")

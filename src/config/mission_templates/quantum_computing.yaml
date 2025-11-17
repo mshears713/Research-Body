@@ -1,0 +1,55 @@
+# ═══════════════════════════════════════════════════════════════
+# MISSION TEMPLATE: Quantum Computing Research
+# ═══════════════════════════════════════════════════════════════
+#
+# DOMAIN: Quantum Computing & Cryptography
+# USE CASE: Researching quantum algorithms, hardware, and applications
+#
+# ═══════════════════════════════════════════════════════════════
+
+mission_name: "Quantum Computing Advances and Applications"
+domain: "quantum_computing"
+research_type: "technology_survey"
+
+topic: "recent advances in quantum computing hardware, algorithms, and practical applications"
+
+target_urls:
+  - "https://quantum.ibm.com/"
+  - "https://quantumai.google/"
+  - "https://www.rigetti.com/research"
+  - "https://arxiv.org/list/quant-ph/recent"
+
+keywords:
+  - "quantum computing"
+  - "quantum algorithm"
+  - "qubit"
+  - "quantum supremacy"
+  - "quantum error correction"
+  - "NISQ"
+  - "quantum annealing"
+  - "quantum cryptography"
+  - "quantum simulation"
+  - "gate-based quantum"
+
+max_sources: 10
+use_intelligent_crawling: true
+max_crawl_depth: 2
+
+summary_style: "technical"
+min_quality_score: 0.7
+include_citations: true
+
+store_to_notion: true
+export_format: "markdown"
+
+focus_areas:
+  - "Hardware Developments"
+  - "Algorithm Innovation"
+  - "Error Correction"
+  - "Practical Applications"
+  - "Industry Implementations"
+
+notes: |
+  Quantum computing research template covering hardware advances,
+  algorithmic developments, and real-world applications. Targets
+  industry research labs and arXiv preprints.
