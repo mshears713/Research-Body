@@ -32,15 +32,15 @@ import streamlit as st
 import sys
 from pathlib import Path
 
-# Add src to path
-src_path = Path(__file__).parent.parent.parent / "src"
-sys.path.insert(0, str(src_path))
+# Add project root to path
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
 
-from agents.planner_agent import PlannerAgent
-from agents.summarizer_agent import SummarizerAgent
-from tools.scraper_tool import ScraperTool
-from tools.cleaner_tool import CleanerTool
-from pipeline.mission_model import MissionRequest
+from src.agents.planner_agent import PlannerAgent
+from src.agents.summarizer_agent import SummarizerAgent
+from src.tools.scraper_tool import ScraperTool
+from src.tools.cleaner_tool import CleanerTool
+from src.pipeline.mission_model import MissionRequest
 
 
 # Page configuration
