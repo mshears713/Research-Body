@@ -297,6 +297,83 @@ class LoggerTool:
             'total_summaries': total_summaries
         }
 
+    def get_all_missions(self) -> List[Dict]:
+        """
+        Get all missions with full metadata and summaries.
+
+        PHASE 5 ENHANCEMENT:
+        --------------------
+        Returns complete mission data for trend analysis.
+        Used by TrendAnalyzer for cross-mission insights.
+
+        Returns:
+            List of all missions with parsed metadata
+        """
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT * FROM missions ORDER BY created_at DESC')
+        rows = cursor.fetchall()
+
+        missions = []
+        for row in rows:
+            mission = dict(row)
+            # Parse JSON metadata
+            if mission['metadata']:
+                try:
+                    mission['metadata'] = json.loads(mission['metadata'])
+                except:
+                    mission['metadata'] = {}
+
+            missions.append(mission)
+
+        conn.close()
+        return missions
+
+    def get_mission_with_summaries(self, mission_id: str) -> Optional[Dict]:
+        """
+        Get mission with all associated summaries.
+
+        PHASE 5 ENHANCEMENT:
+        --------------------
+        Returns mission data enriched with summaries for analysis.
+
+        Args:
+            mission_id: Mission identifier
+
+        Returns:
+            Dict with mission data and summaries array
+        """
+        mission = self.get_mission_by_id(mission_id)
+        if not mission:
+            return None
+
+        # Get summaries
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT * FROM summaries
+            WHERE mission_id = ?
+            ORDER BY timestamp
+        ''', (mission_id,))
+
+        summary_rows = cursor.fetchall()
+        conn.close()
+
+        mission['summaries'] = [dict(row) for row in summary_rows]
+
+        # Parse metadata
+        if mission['metadata']:
+            try:
+                mission['metadata'] = json.loads(mission['metadata'])
+            except:
+                mission['metadata'] = {}
+
+        return mission
+
 
 # Convenience functions for simple one-off logging
 def init_database() -> bool:

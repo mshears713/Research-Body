@@ -1,0 +1,54 @@
+# ═══════════════════════════════════════════════════════════════
+# MISSION TEMPLATE: Climate Modeling & Prediction
+# ═══════════════════════════════════════════════════════════════
+#
+# DOMAIN: Climate Science & Environmental Modeling
+# USE CASE: Researching climate models, prediction systems, data sources
+#
+# ═══════════════════════════════════════════════════════════════
+
+mission_name: "AI-Enhanced Climate Modeling and Prediction"
+domain: "climate_science"
+research_type: "model_analysis"
+
+topic: "machine learning applications in climate modeling, prediction accuracy, and extreme weather forecasting"
+
+target_urls:
+  - "https://www.ipcc.ch/"
+  - "https://www.noaa.gov/climate"
+  - "https://climate.nasa.gov/"
+  - "https://www.ecmwf.int/"
+
+keywords:
+  - "climate model"
+  - "weather prediction"
+  - "climate change"
+  - "machine learning climate"
+  - "extreme weather"
+  - "climate data"
+  - "temperature prediction"
+  - "climate simulation"
+  - "AI weather"
+  - "global warming"
+
+max_sources: 12
+use_intelligent_crawling: true
+max_crawl_depth: 2
+
+summary_style: "technical"
+min_quality_score: 0.6
+include_citations: true
+
+store_to_notion: true
+export_format: "markdown"
+
+focus_areas:
+  - "Model Accuracy"
+  - "Prediction Methods"
+  - "Data Sources"
+  - "ML Integration"
+  - "Validation Studies"
+
+notes: |
+  Climate modeling research with focus on ML/AI integration.
+  Sources include IPCC, NASA, NOAA for authoritative data and models.

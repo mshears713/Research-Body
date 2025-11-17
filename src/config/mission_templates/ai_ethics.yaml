@@ -1,0 +1,56 @@
+# ═══════════════════════════════════════════════════════════════
+# MISSION TEMPLATE: AI Ethics & Policy Research
+# ═══════════════════════════════════════════════════════════════
+#
+# DOMAIN: Ethics, Policy & Social Impact
+# USE CASE: Researching AI ethics, bias, fairness, and regulation
+#
+# ═══════════════════════════════════════════════════════════════
+
+mission_name: "AI Ethics and Fairness in Deployment"
+domain: "ai_ethics"
+research_type: "policy_analysis"
+
+topic: "artificial intelligence ethics, algorithmic fairness, and bias mitigation in real-world AI systems"
+
+# Target Sources
+target_urls:
+  - "https://www.partnershiponai.org/"
+  - "https://ainowinstitute.org/"
+  - "https://www.fatml.org/"
+  - "https://ethicalai.org/"
+
+keywords:
+  - "AI ethics"
+  - "algorithmic fairness"
+  - "bias mitigation"
+  - "responsible AI"
+  - "AI governance"
+  - "transparency"
+  - "accountability"
+  - "fairness metrics"
+  - "ethical AI"
+  - "algorithmic bias"
+
+max_sources: 12
+use_intelligent_crawling: true
+max_crawl_depth: 2
+
+summary_style: "executive"  # More accessible for policy audience
+min_quality_score: 0.6
+include_citations: true
+
+store_to_notion: true
+export_format: "markdown"
+
+focus_areas:
+  - "Bias Detection"
+  - "Fairness Metrics"
+  - "Regulatory Frameworks"
+  - "Case Studies"
+  - "Best Practices"
+
+notes: |
+  AI ethics research spanning technical fairness measures and
+  policy considerations. Uses executive summary style for
+  accessibility to non-technical stakeholders.

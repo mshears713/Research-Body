@@ -1,0 +1,75 @@
+# ═══════════════════════════════════════════════════════════════
+# MISSION TEMPLATE: Wildfire Research
+# ═══════════════════════════════════════════════════════════════
+#
+# DOMAIN: Environmental Science & Disaster Management
+# USE CASE: Researching wildfire detection, prediction, and response
+#
+# TEACHING NOTE:
+# This template demonstrates how to configure missions for a specific
+# research domain. Notice the domain-specific:
+#   • Target URLs (academic, government, research institutions)
+#   • Keywords (wildfire-specific terminology)
+#   • Summary style (technical for scientific audience)
+#
+# ═══════════════════════════════════════════════════════════════
+
+# Mission Metadata
+mission_name: "AI-Powered Wildfire Detection Systems"
+domain: "environmental_science"
+research_type: "technology_review"
+
+# Research Topic
+topic: "artificial intelligence and machine learning for wildfire detection and early warning systems"
+
+# Target Sources
+# TEACHING NOTE: These are curated, high-quality sources for wildfire research
+target_urls:
+  - "https://www.nasa.gov/earth/wildfire"
+  - "https://www.nifc.gov/fire-information"
+  - "https://www.fs.usda.gov/science-technology/fire"
+  - "https://www.ncei.noaa.gov/products/fire-and-smoke"
+
+# Keywords for relevance filtering
+keywords:
+  - "wildfire"
+  - "fire detection"
+  - "early warning"
+  - "satellite imagery"
+  - "smoke detection"
+  - "machine learning"
+  - "AI prediction"
+  - "remote sensing"
+  - "thermal imaging"
+  - "forest fire"
+
+# Scraping Configuration
+max_sources: 10
+use_intelligent_crawling: true  # Enable ScraperAgent for discovering related sources
+max_crawl_depth: 2
+
+# Content Preferences
+summary_style: "technical"  # Options: technical, executive, casual
+min_quality_score: 0.6
+include_citations: true
+
+# Output Configuration
+store_to_notion: true
+export_format: "markdown"  # Options: markdown, json, yaml
+
+# Research Focus Areas
+focus_areas:
+  - "Detection Technologies"
+  - "Prediction Models"
+  - "Early Warning Systems"
+  - "Response Automation"
+  - "Case Studies"
+
+# Notes
+notes: |
+  This mission template is optimized for researching AI/ML applications
+  in wildfire detection and management. The sources include NASA (satellite
+  data), USFS (forest service research), and NOAA (climate/fire data).
+
+  Intelligent crawling is enabled to discover related research papers and
+  technical reports linked from these authoritative sources.
