@@ -9,6 +9,7 @@ AGENTS and TOOLS through an anatomical metaphor.
 
 import streamlit as st
 from pathlib import Path
+import sys
 
 # Page configuration
 st.set_page_config(
@@ -17,6 +18,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Import global sidebar navigation
+from sidebar_nav import render_sidebar_navigation
 
 # ============================================================================
 # HEADER: WELCOME & OVERVIEW
@@ -271,22 +275,7 @@ Planner Agent makes decisions.
 """)
 
 # ============================================================================
-# SIDEBAR: QUICK STATS
+# GLOBAL SIDEBAR NAVIGATION (Step 39)
 # ============================================================================
 
-with st.sidebar:
-    st.markdown("### 📊 System Overview")
-
-    st.metric("Total Agents", "2", help="Planner, Summarizer")
-    st.metric("Total Tools", "4", help="Scraper, Cleaner, Notion, Logger")
-    st.metric("Pipeline Stages", "6", help="Plan → Fetch → Clean → Summarize → Store → Log")
-
-    st.markdown("---")
-    st.markdown("### 🎓 Learning Path")
-    st.markdown("""
-    1. Read the Home page
-    2. Explore each organ (Chapters 1-5)
-    3. Understand Agent vs Tool (Chapter 6)
-    4. Visualize the pipeline (Chapter 7)
-    5. Run a mission! (Chapter 8)
-    """)
+render_sidebar_navigation()
